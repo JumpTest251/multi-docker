@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - docker build -t amueller2/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true amueller2/react-test npm test
+
+after_success:
+  - docker build -t amueller2/multi-client ./client
+  - docker build -t amueller2/multi-nginx ./nginx
+  - docker build -t amueller2/multi-server ./server
+  - docker build -t amueller2/multi-worker ./worker
+  # Log in Docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images
+  - docker push amueller2/multi-client
+  - docker push amueller2/multi-nginx
+  - docker push amueller2/multi-server
+  - docker push amueller2/multi-worker
